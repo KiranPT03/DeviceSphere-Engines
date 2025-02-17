@@ -1,0 +1,3 @@
+{"level":"info","ts":1738728273.2700918,"caller":"logger/logger.go:102","msg":"Hello, World!","caller":"/home/kiran-tavadare/Work/Github/FactorySphere/DeviceSphere/Engines/elasticstore/main.go:8"}
+{"level":"info","ts":1738736738.591022,"caller":"logger/logger.go:102","msg":"Hello, World!","caller":"C:/Users/KKiran/Work/Features/elasticstore/main.go:8"}
+{"level":"info","ts":1738736758.2308576,"caller":"logger/logger.go:102","msg":"Hello, World!","caller":"C:/Users/KKiran/Work/Features/elasticstore/main.go:8"}

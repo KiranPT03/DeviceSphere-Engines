@@ -1,0 +1,13 @@
+logger:
+  level: DEBUG
+  filepath: .elasticstore.log
+
+kafka:
+  bootstrap_servers: localhost:9092
+  inlet_topic: processed_data
+  consumer_group: cg_elastic_store
+
+elasticstore:
+  broker: http://localhost:9092
+  
+

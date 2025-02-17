@@ -1,0 +1,39 @@
+version: '3'
+
+networks:
+  db-net:
+    driver: bridge
+
+services:
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: user_device_sphere
+      POSTGRES_PASSWORD: password@device_sphere
+      POSTGRES_DB: device_sphere
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    networks:
+      - db-net
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: pgadmin4@pgadmin.org
+      PGADMIN_DEFAULT_PASSWORD: pgadmin4
+    ports:
+      - "8080:80"
+    depends_on:
+      - postgres
+    networks:
+      - db-net
+
+volumes:
+  pg-data:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/user/docker-volumes/postgres-data
+      o: bind
