@@ -1,0 +1,16 @@
+logger:
+  level: DEBUG
+  filepath: ./kafkaingest.log
+
+kafka:
+  bootstrap_servers: localhost:9092
+  inlet_topic: raw_data
+  outlet_topic: processed_data
+  consumer_group: cg_kafka_ingest
+
+postgres:
+  host: localhost
+  port: 5432
+  user: user_device_sphere
+  password: p@ssw0rd@deviceSphere
+  dbname: data_device_sphere
