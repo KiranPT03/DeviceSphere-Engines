@@ -1,4 +1,4 @@
-module github.com/kiranpt03/factorysphere/devicesphere/engines/kafkaingest
+module github.com/kiranpt03/factorysphere/devicesphere/engines/rulesengine
 
 go 1.24.0
 

@@ -1,0 +1,18 @@
+logger:
+  level: DEBUG
+  filepath: ./kafkaingest.log
+
+nats:
+  server: "nats://localhost:4222"
+  stream: "RULE_ENGINE_STREAM" # Separate inlet stream
+  inlet_subject: "data.processed"
+  outlet_subject: "data.notification"
+  consumer_group: "cg_rule_engine"
+  durable: "nats_consumer_durable"
+
+postgres:
+  host: localhost
+  port: 5432
+  user: user_device_sphere
+  password: p@ssw0rd@deviceSphere
+  dbname: data_device_sphere

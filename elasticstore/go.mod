@@ -1,6 +1,6 @@
 module github.com/kiranpt03/factorysphere/devicesphere/engines/elasticstore
 
-go 1.23.6
+go 1.24.0
 
 require (
 	github.com/segmentio/kafka-go v0.4.47

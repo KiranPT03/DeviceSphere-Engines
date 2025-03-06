@@ -7,16 +7,17 @@ import (
 	"time"
 
 	config "github.com/kiranpt03/factorysphere/devicesphere/engines/kafkaingest/pkg/config"
-	bitnamikafka "github.com/kiranpt03/factorysphere/devicesphere/engines/kafkaingest/pkg/connectors/bitnamikafka"
+	nats "github.com/kiranpt03/factorysphere/devicesphere/engines/kafkaingest/pkg/connectors/nats"
 	postgres "github.com/kiranpt03/factorysphere/devicesphere/engines/kafkaingest/pkg/databases/postgres"
 	models "github.com/kiranpt03/factorysphere/devicesphere/engines/kafkaingest/pkg/models"
 	log "github.com/kiranpt03/factorysphere/devicesphere/engines/kafkaingest/pkg/utils/loggers"
 )
 
 type DataProcessor struct {
-	PGRepository  *postgres.PostgreSQLRepository
-	KafkaConsumer *bitnamikafka.KafkaConsumer
-	KafkaProducer *bitnamikafka.KafkaProducer
+	PGRepository *postgres.PostgreSQLRepository
+	NatsConsumer *nats.NatsConsumer
+	NatsProducer *nats.NatsProducer
+	Config       *config.Config
 }
 
 func NewDataProcessor(config *config.Config) *DataProcessor {
@@ -26,30 +27,35 @@ func NewDataProcessor(config *config.Config) *DataProcessor {
 		panic(err)
 	}
 
-	kafkaConfig := bitnamikafka.KafkaConsumerConfig{
-		Brokers:  []string{config.Kafka.BootstrapServers},
-		GroupID:  config.Kafka.ConsumerGroup,
-		MinBytes: 10e3, // 10KB
-		MaxBytes: 10e6, // 10MB
-		Topics:   []string{config.Kafka.InletTopic, "processed_data"},
+	natsConsumerConfig := nats.NatsConsumerConfig{
+		Servers:  []string{config.Nats.Server},
+		Stream:   config.Nats.Stream,
+		GroupID:  config.Nats.ConsumerGroup,
+		Subjects: []string{config.Nats.InletSubject, "test.topic"},
+		Durable:  config.Nats.Durable,
 	}
-	consumer := bitnamikafka.NewKafkaConsumer(kafkaConfig)
+	consumer := nats.NewNatsConsumer(natsConsumerConfig)
 
-	kafkaProducerConfig := bitnamikafka.KafkaProducerConfig{
-		Brokers: []string{config.Kafka.BootstrapServers},
-		Topic:   config.Kafka.OutletTopic,
+	natsProducerConfig := nats.NatsProducerConfig{
+		Servers: []string{config.Nats.Server},
+		Stream:  config.Nats.Stream,
+		Subject: config.Nats.OutletSubject,
 	}
 
-	producer := bitnamikafka.NewKafkaProducer(kafkaProducerConfig)
+	producer, err := nats.NewNatsProducer(natsProducerConfig)
+	if err != nil {
+		panic(err)
+	}
 
 	return &DataProcessor{
-		PGRepository:  repository,
-		KafkaConsumer: consumer,
-		KafkaProducer: producer,
+		PGRepository: repository,
+		NatsConsumer: consumer,
+		NatsProducer: producer,
+		Config:       config,
 	}
 }
 
-func (dp *DataProcessor) convertResultsToDevice(results []map[string]interface{}) (*models.Device, error) {
+func (dp *DataProcessor) convertResultsToDevice(results []map[string]interface{}, propertyValue string) (*models.Device, error) {
 	if len(results) == 0 {
 		return nil, nil
 	}
@@ -86,7 +92,7 @@ func (dp *DataProcessor) convertResultsToDevice(results []map[string]interface{}
 			State:       row["propertystate"].(string),
 			Status:      row["propertystatus"].(string),
 			DataType:    row["propertydatatype"].(string),
-			Value:       row["propertyvalue"].(string),
+			Value:       propertyValue,
 			Threshold:   row["propertythreshold"].(string),
 		}
 
@@ -101,33 +107,33 @@ func (dp *DataProcessor) convertResultsToDevice(results []map[string]interface{}
 
 func (dp *DataProcessor) getDeviceData(deviceRefId, propertyRefId string) ([]map[string]interface{}, error) {
 	query := `
-        SELECT
-            d.id AS deviceid,
-            d.reference_id AS devicereferenceid,
-            d.type AS devicetype,
-            d.device_name AS devicename,
-            d.created_at AS devicecreatedat,
-            d.state AS devicestate,
-            d.location AS devicelocation,
-            d.status AS devicestatus,
-            d.customer AS devicecustomer,
-            d.site AS devicesite,
-            p.id AS propertyid,
-            p.reference_id AS propertyreferenceid,
-            p.name AS propertyname,
-            p.unit AS propertyunit,
-            p.state AS propertystate,
-            p.status AS propertystatus,
-            p.data_type AS propertydatatype,
-            p.value AS propertyvalue,
-            p.threshold AS propertythreshold
-        FROM
-            devices d
-        JOIN
-            properties p ON d.id = p.device_id
-        WHERE
-            d.reference_id = $1 AND p.reference_id = $2;
-`
+                SELECT
+                        d.id AS deviceid,
+                        d.reference_id AS devicereferenceid,
+                        d.type AS devicetype,
+                        d.device_name AS devicename,
+                        d.created_at AS devicecreatedat,
+                        d.state AS devicestate,
+                        d.location AS devicelocation,
+                        d.status AS devicestatus,
+                        d.customer AS devicecustomer,
+                        d.site AS devicesite,
+                        p.id AS propertyid,
+                        p.reference_id AS propertyreferenceid,
+                        p.name AS propertyname,
+                        p.unit AS propertyunit,
+                        p.state AS propertystate,
+                        p.status AS propertystatus,
+                        p.data_type AS propertydatatype,
+                        p.value AS propertyvalue,
+                        p.threshold AS propertythreshold
+                FROM
+                        devices d
+                JOIN
+                        properties p ON d.id = p.device_id
+                WHERE
+                        d.reference_id = $1 AND p.reference_id = $2;
+        `
 
 	results, err := dp.PGRepository.ExecuteQuery(query, deviceRefId, propertyRefId)
 	if err != nil {
@@ -155,7 +161,7 @@ func (dp *DataProcessor) dataTransformer(data string) {
 			log.Error("Error unmarshalling JSON: %v", devErr)
 		}
 		log.Debug("Received device Data: %v", result)
-		deviceModel, modelEr := dp.convertResultsToDevice(result)
+		deviceModel, modelEr := dp.convertResultsToDevice(result, prop.Value)
 		if modelEr != nil {
 			log.Error("Error unmarshalling JSON: %v", modelEr)
 		}
@@ -167,32 +173,36 @@ func (dp *DataProcessor) dataTransformer(data string) {
 			continue // Skip to the next property if marshalling fails
 		}
 
-		ctx := context.Background() // Or use a context with timeout/cancellation
-		producer := dp.KafkaProducer
-		defer producer.Close()
+		ctx := context.Background()
+		producer := dp.NatsProducer
+
 		err = producer.Produce(ctx, []byte(deviceModel.ReferenceID), deviceModelBytes)
+
 		if err != nil {
-			log.Error("Error producing message to Kafka: %v", err)
+			log.Error("Error producing message to NATS: %v", err)
 		}
+
 	}
 
 }
 
 func (dp *DataProcessor) ProcessData() {
 	log.Info("Processing the data")
-	appConfig, _ := config.GetConfig()
-	log.Debug("Printing config %v", appConfig)
-	consumer := dp.KafkaConsumer
+	consumer := dp.NatsConsumer
 	defer consumer.Close()
-	rawDataTopicChan := consumer.Consume("raw_data")
-	processedDataTopicChan := consumer.Consume("processed_data")
+
+	producer := dp.NatsProducer
+	defer producer.Close()
+
+	rawDataTopicChan := consumer.Consume(dp.Config.Nats.InletSubject)
+	processedDataTopicChan := consumer.Consume("test.topic")
 
 	for {
 		select {
 		case msg := <-rawDataTopicChan:
-			dp.dataTransformer(string(msg))
+			go dp.dataTransformer(string(msg.Data))
 		case msg := <-processedDataTopicChan:
-			log.Debug("Received message topic: processed_data: %s", msg)
+			log.Debug("Received message topic: processed_data: %s", msg.Data)
 		}
 	}
 }

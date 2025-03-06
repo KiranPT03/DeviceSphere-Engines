@@ -9,7 +9,7 @@ services:
     image: postgres:latest
     environment:
       POSTGRES_USER: user_device_sphere
-      POSTGRES_PASSWORD: password@device_sphere
+      POSTGRES_PASSWORD: p@ssw0rd@deviceSphere
       POSTGRES_DB: device_sphere
     ports:
       - "5432:5432"

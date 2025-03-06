@@ -1,12 +1,13 @@
-logger:
-  level: DEBUG
-  filepath: ./kafkaingest.log
+level: DEBUG
+filepath: ./natsingest.log
 
-kafka:
-  bootstrap_servers: localhost:9092
-  inlet_topic: raw_data
-  outlet_topic: processed_data
-  consumer_group: cg_kafka_ingest
+nats:
+  server: "nats://localhost:4222"
+  stream: "DEVICE_SPHERE_STREAM" # Separate inlet stream
+  inlet_subject: "data.raw"
+  outlet_subject: "data.processed"
+  consumer_group: "cg_nats_ingest"
+  durable: "nats_consumer_durable"
 
 postgres:
   host: localhost

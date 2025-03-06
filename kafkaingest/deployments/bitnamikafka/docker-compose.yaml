@@ -6,30 +6,35 @@ services:
     ports:
       - "2181:2181"
     environment:
-      - ZOOKEEPER_CLIENT_PORT=2181
       - ALLOW_ANONYMOUS_LOGIN=yes
-    hostname: zookeeper
     volumes:
-      - "zookeeper_data:/bitnami/zookeeper"
+      - zookeeper_data:/bitnami/zookeeper
+    networks:
+      - kafka-network
 
   kafka:
     image: "bitnami/kafka:latest"
     ports:
       - "9092:9092"
     environment:
-      - KAFKA_BROKER_ID=1
       - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
       - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
-      - KAFKA_LISTENERS=PLAINTEXT://:9092
+      - ALLOW_PLAINTEXT_LISTENER=yes
       - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
       - KAFKA_DELETE_TOPIC_ENABLE=true
-    links:
-      - zookeeper
     volumes:
-      - "kafka_data:/bitnami/kafka"
+      - kafka_data:/bitnami/kafka
+    depends_on:
+      - zookeeper
+    networks:
+      - kafka-network
 
 volumes:
   zookeeper_data:
     driver: local
   kafka_data:
     driver: local
+
+networks:
+  kafka-network:
+    driver: bridge
