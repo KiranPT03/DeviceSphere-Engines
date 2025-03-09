@@ -5,8 +5,8 @@ logger:
 nats:
   server: "nats://localhost:4222"
   stream: "POSTGRE_STORE_STREAM" # Separate inlet stream
-  inlet_subject: "data.processed"
-  outlet_subject: "data.notification"
+  inlet_subject: "data.processedData"
+  outlet_subject: "data.notificationData"
   consumer_group: "cg_postgre_store"
   durable: "nats_consumer_durable"
 

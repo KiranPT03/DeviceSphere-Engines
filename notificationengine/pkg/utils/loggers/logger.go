@@ -1,8 +1,7 @@
-package logger
+package loggers
 
 import (
 	"fmt"
-	"runtime"
 	"sync"
 
 	"go.uber.org/zap"
@@ -20,10 +19,9 @@ func GetLogger() *zap.Logger {
 		config.EncoderConfig.TimeKey = "timestamp"
 		config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 		config.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
-		config.EncoderConfig.CallerKey = "caller" // Add caller key
 
 		var err error
-		instance, err = config.Build(zap.AddCallerSkip(1), zap.AddCaller()) // Add caller info
+		instance, err = config.Build()
 		if err != nil {
 			panic(err)
 		}
@@ -32,36 +30,27 @@ func GetLogger() *zap.Logger {
 	return instance
 }
 
-func logWithCaller(logFunc func(string, ...zap.Field), format string, v ...interface{}) {
-	msg := fmt.Sprintf(format, v...)
-
-	pc, _, line, ok := runtime.Caller(2) // Get caller info
-	funcName := "unknown"
-	if ok {
-		f := runtime.FuncForPC(pc)
-		if f != nil {
-			funcName = f.Name()
-		}
-	}
-	logFunc(msg, zap.String("func", funcName), zap.Int("line", line))
-}
-
 func Debug(format string, v ...interface{}) {
-	logWithCaller(GetLogger().Debug, format, v...)
+	msg := fmt.Sprintf(format, v...)
+	GetLogger().Debug(msg)
 }
 
 func Info(format string, v ...interface{}) {
-	logWithCaller(GetLogger().Info, format, v...)
+	msg := fmt.Sprintf(format, v...)
+	GetLogger().Info(msg)
 }
 
 func Warn(format string, v ...interface{}) {
-	logWithCaller(GetLogger().Warn, format, v...)
+	msg := fmt.Sprintf(format, v...)
+	GetLogger().Warn(msg)
 }
 
 func Error(format string, v ...interface{}) {
-	logWithCaller(GetLogger().Error, format, v...)
+	msg := fmt.Sprintf(format, v...)
+	GetLogger().Error(msg)
 }
 
 func Fatal(format string, v ...interface{}) {
-	logWithCaller(GetLogger().Fatal, format, v...)
+	msg := fmt.Sprintf(format, v...)
+	GetLogger().Fatal(msg)
 }

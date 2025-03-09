@@ -3,9 +3,9 @@ filepath: ./natsingest.log
 
 nats:
   server: "nats://localhost:4222"
-  stream: "DEVICE_SPHERE_STREAM" # Separate inlet stream
-  inlet_subject: "data.raw"
-  outlet_subject: "data.processed"
+  stream: "NATS_INGEST_STREAM" # Separate inlet stream
+  inlet_subject: "data.rawData"
+  outlet_subject: "data.processedData"
   consumer_group: "cg_nats_ingest"
   durable: "nats_consumer_durable"
 

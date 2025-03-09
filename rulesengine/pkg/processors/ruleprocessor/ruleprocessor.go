@@ -138,7 +138,9 @@ func (rp *RuleProcessor) getRuleByID(ruleID string) (*models.Rule, error) {
                                 c.position AS condition_position,
                                 c.type AS condition_type,
                                 c.device_id AS condition_device_id,
+								c.device_name AS condition_device_name,
                                 c.property_id AS condition_property_id,
+								c.property_name AS condition_property_name,
                                 c.operator_id AS condition_operator_id,
                                 c.operator_symbol AS condition_operator_symbol,
                                 c.value AS condition_value
@@ -181,7 +183,9 @@ func (rp *RuleProcessor) getRuleByID(ruleID string) (*models.Rule, error) {
 				Position:       row["condition_position"].(string),
 				Type:           row["condition_type"].(string),
 				DeviceId:       row["condition_device_id"].(string),
+				DeviceName:    row["condition_device_name"].(string),
 				PropertyId:     row["condition_property_id"].(string),
+				PropertyName: row["condition_property_name"].(string),
 				OperatorId:     row["condition_operator_id"].(string),
 				OperatorSymbol: row["condition_operator_symbol"].(string),
 				Value:          row["condition_value"].(string),
@@ -422,7 +426,7 @@ func (rp *RuleProcessor) dataTransformer(data string) {
 					continue // Skip to the next property if marshalling fails
 				}
 				producer := rp.NatsProducer
-				defer producer.Close()
+				// defer producer.Close()
 				err = producer.Produce(ctx, []byte(rule.ID), ruleModelByte)
 				if err != nil {
 					log.Error("Error producing message to Kafka: %v", err)

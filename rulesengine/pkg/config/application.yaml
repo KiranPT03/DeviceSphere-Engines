@@ -5,8 +5,8 @@ logger:
 nats:
   server: "nats://localhost:4222"
   stream: "RULE_ENGINE_STREAM" # Separate inlet stream
-  inlet_subject: "data.processed"
-  outlet_subject: "data.notification"
+  inlet_subject: "data.processedData"
+  outlet_subject: "data.ruleNotificationData"
   consumer_group: "cg_rule_engine"
   durable: "nats_consumer_durable"
 

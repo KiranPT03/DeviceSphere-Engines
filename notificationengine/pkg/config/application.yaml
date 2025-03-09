@@ -1,12 +1,11 @@
-logger:
-  level: DEBUG
-  filepath: ./kafkaingest.log
+level: DEBUG
+filepath: ./natsingest.log
 
 nats:
   server: "nats://localhost:4222"
   stream: "NOTIFICATION_ENGINE_STREAM" # Separate inlet stream
-  inlet_subject: "data.notification"
-  outlet_subject: "data.elastic"
+  inlet_subject: "data.ruleNotificationData"
+  outlet_subject: "data.processedNotificationData"
   consumer_group: "cg_notification_engine"
   durable: "nats_consumer_durable"
 

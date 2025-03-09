@@ -21,7 +21,6 @@ type Logger struct {
 type Nats struct {
 	Server        string `yaml:"server"`
 	Stream        string `yaml:"stream"`
-	OutletStream  string `yaml:"outlet_stream"`
 	InletSubject  string `yaml:"inlet_subject"`
 	OutletSubject string `yaml:"outlet_subject"`
 	ConsumerGroup string `yaml:"consumer_group"`

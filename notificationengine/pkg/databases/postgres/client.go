@@ -7,8 +7,9 @@ import (
 
 	"github.com/google/uuid"
 
-	config "github.com/kiranpt03/factorysphere/devicesphere/engines/rulesengine/pkg/config"
-	log "github.com/kiranpt03/factorysphere/devicesphere/engines/rulesengine/pkg/utils/loggers"
+	config "factorysphere/devicesphere/engines/notificationengine/pkg/config"
+	log "factorysphere/devicesphere/engines/notificationengine/pkg/utils/loggers"
+
 	_ "github.com/lib/pq"
 )
 
@@ -189,7 +190,7 @@ func (r *PostgreSQLRepository) CheckExist(tableName string, column string, value
 
 // ExecuteQuery executes a raw SQL query and returns the results.
 func (r *PostgreSQLRepository) ExecuteQuery(query string, args ...interface{}) ([]map[string]interface{}, error) {
-	// log.Debug("Executing query: %s", query)
+	log.Debug("Executing query: %s", query)
 
 	rows, err := r.db.Query(query, args...)
 	if err != nil {
