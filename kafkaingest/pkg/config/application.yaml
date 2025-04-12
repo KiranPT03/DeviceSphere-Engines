@@ -2,15 +2,13 @@ level: DEBUG
 filepath: ./natsingest.log
 
 nats:
-  server: "nats://localhost:4222"
-  stream: "NATS_INGEST_STREAM" # Separate inlet stream
+  server: "nats://172.31.38.233:4222"
   inlet_subject: "data.rawData"
   outlet_subject: "data.processedData"
   consumer_group: "cg_nats_ingest"
-  durable: "nats_consumer_durable"
 
 postgres:
-  host: localhost
+  host: "13.200.253.161"
   port: 5432
   user: user_device_sphere
   password: p@ssw0rd@deviceSphere

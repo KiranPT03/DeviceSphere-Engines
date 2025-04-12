@@ -25,17 +25,15 @@ func NewPostgreProcessor(config *config.Config) *PostgreProcessor {
 	}
 
 	natsConsumerConfig := nats.NatsConsumerConfig{
-		Servers:  []string{config.Nats.Server},
-		Stream:   config.Nats.Stream,
+		Servers: []string{config.Nats.Server},
+
 		GroupID:  config.Nats.ConsumerGroup,
 		Subjects: []string{config.Nats.InletSubject},
-		Durable:  config.Nats.Durable,
 	}
 	consumer := nats.NewNatsConsumer(natsConsumerConfig)
 
 	natsProducerConfig := nats.NatsProducerConfig{
 		Servers: []string{config.Nats.Server},
-		Stream:  config.Nats.Stream,
 		Subject: config.Nats.OutletSubject,
 	}
 

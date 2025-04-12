@@ -12,16 +12,13 @@ import (
 // NatsConsumerConfig holds the configuration for the NatsConsumer.
 type NatsConsumerConfig struct {
 	Servers  []string
-	Stream   string
 	GroupID  string
 	Subjects []string
-	Durable  string
 }
 
 // NatsConsumer is a struct that encapsulates the NATS consumer logic.
 type NatsConsumer struct {
 	nc       *nats.Conn
-	js       nats.JetStreamContext
 	msgChans map[string]chan *nats.Msg
 	config   NatsConsumerConfig
 	subs     map[string]*nats.Subscription
@@ -45,36 +42,10 @@ func (nc *NatsConsumer) init() {
 		log.Fatalf("Error connecting to NATS: %v", err)
 	}
 
-	nc.js, err = nc.nc.JetStream()
-	if err != nil {
-		log.Fatalf("Error creating JetStream context: %v", err)
-	}
-
-	// Create or ensure the stream exists
-	_, err = nc.js.AddStream(&nats.StreamConfig{
-		Name:     nc.config.Stream,
-		Subjects: nc.config.Subjects,
-		Storage:  nats.FileStorage,
-	})
-	if err != nil {
-		log.Printf("Warning: stream may already exist: %v", err)
-	}
-
-	// Create or ensure the consumer exists
-	_, err = nc.js.AddConsumer(nc.config.Stream, &nats.ConsumerConfig{
-		Durable:        nc.config.Durable,
-		DeliverSubject: "",
-		DeliverGroup:   nc.config.GroupID,
-	})
-
-	if err != nil {
-		log.Printf("Warning: consumer may already exist: %v", err)
-	}
-
 	for _, subject := range nc.config.Subjects {
 		nc.msgChans[subject] = make(chan *nats.Msg)
 
-		sub, err := nc.js.QueueSubscribe(subject, nc.config.GroupID, func(msg *nats.Msg) {
+		sub, err := nc.nc.QueueSubscribe(subject, nc.config.GroupID, func(msg *nats.Msg) {
 			nc.msgChans[subject] <- msg
 		})
 		if err != nil {
@@ -82,7 +53,6 @@ func (nc *NatsConsumer) init() {
 			continue
 		}
 		nc.subs[subject] = sub
-
 	}
 
 	// Handle graceful shutdown

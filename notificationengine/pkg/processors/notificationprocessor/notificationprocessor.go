@@ -22,17 +22,15 @@ func NewNotificationProcessor(config *config.Config) *NotificationProcessor {
 	}
 
 	natsConsumerConfig := nats.NatsConsumerConfig{
-		Servers:  []string{config.Nats.Server},
-		Stream:   config.Nats.Stream,
+		Servers: []string{config.Nats.Server},
+
 		GroupID:  config.Nats.ConsumerGroup,
 		Subjects: []string{config.Nats.InletSubject},
-		Durable:  config.Nats.Durable,
 	}
 	consumer := nats.NewNatsConsumer(natsConsumerConfig)
 
 	natsProducerConfig := nats.NatsProducerConfig{
 		Servers: []string{config.Nats.Server},
-		Stream:  config.Nats.Stream,
 		Subject: config.Nats.OutletSubject,
 	}
 
@@ -49,9 +47,8 @@ func NewNotificationProcessor(config *config.Config) *NotificationProcessor {
 	}
 }
 
-
 func (np *NotificationProcessor) dataTransformer(data string) {
-	log.Debug("Data received for rule %s",data)
+	log.Debug("Data received for rule %s", data)
 
 }
 
@@ -70,8 +67,8 @@ func (np *NotificationProcessor) ProcessData() {
 		select {
 		case msg := <-rawDataTopicChan:
 			go np.dataTransformer(string(msg.Data))
-		// case msg := <-processedDataTopicChan:
-		// 	log.Debug("Received message topic: processed_data: %s", msg.Data)
+			// case msg := <-processedDataTopicChan:
+			// 	log.Debug("Received message topic: processed_data: %s", msg.Data)
 		}
 	}
 }

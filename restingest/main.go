@@ -23,13 +23,11 @@ type RawData struct {
 // Producer Config
 type NatsProducerConfig struct {
 	Servers []string
-	Stream  string
 	Subject string
 }
 
 // NatsProducer
 type NatsProducer struct {
-	js     nats.JetStreamContext
 	nc     *nats.Conn
 	config NatsProducerConfig
 }
@@ -53,29 +51,13 @@ func (np *NatsProducer) init() error {
 		log.Printf("Error connecting to NATS: %v", err)
 		return err
 	}
-
-	np.js, err = np.nc.JetStream()
-	if err != nil {
-		log.Printf("Error creating JetStream context: %v", err)
-		return err
-	}
-
-	_, err = np.js.AddStream(&nats.StreamConfig{
-		Name:     np.config.Stream,
-		Subjects: []string{np.config.Subject},
-		Storage:  nats.FileStorage,
-	})
-
-	if err != nil {
-		log.Printf("Warning: stream may already exist: %v", err)
-	}
-
+	
 	return nil
 }
 
 // Produce
 func (np *NatsProducer) Produce(ctx context.Context, key, value []byte) error {
-	_, err := np.js.Publish(np.config.Subject, value)
+	err := np.nc.Publish(np.config.Subject, value)
 	if err != nil {
 		log.Printf("Error publishing message to NATS: %v", err)
 		return err
@@ -95,9 +77,8 @@ func (np *NatsProducer) Close() {
 func main() {
 	// Configure the NATS producer
 	producerConfig := NatsProducerConfig{
-		Servers: []string{"nats://localhost:4222"}, // Replace with your NATS server address
-		Stream:  "DEVICE_SPHERE_STREAM",            // Replace with your inlet stream name
-		Subject: "data.raw",                        // Replace with your inlet subject
+		Servers: []string{"nats://172.31.38.233:4222"}, // Replace with your NATS server address
+		Subject: "data.rawData",                        // Replace with your subject
 	}
 
 	// Create the NATS producer

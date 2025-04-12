@@ -10,13 +10,11 @@ import (
 // NatsProducerConfig holds the configuration for the NatsProducer.
 type NatsProducerConfig struct {
 	Servers []string
-	Stream  string
 	Subject string
 }
 
 // NatsProducer is a struct that encapsulates the NATS producer logic.
 type NatsProducer struct {
-	js     nats.JetStreamContext
 	nc     *nats.Conn
 	config NatsProducerConfig
 }
@@ -41,28 +39,12 @@ func (np *NatsProducer) init() error {
 		return err
 	}
 
-	np.js, err = np.nc.JetStream()
-	if err != nil {
-		log.Printf("Error creating JetStream context: %v", err)
-		return err
-	}
-
-	_, err = np.js.AddStream(&nats.StreamConfig{
-		Name:     np.config.Stream,
-		Subjects: []string{np.config.Subject},
-		Storage:  nats.FileStorage,
-	})
-
-	if err != nil {
-		log.Printf("Warning: stream may already exist: %v", err)
-	}
-
 	return nil
 }
 
 // Produce sends a message to the NATS subject.
 func (np *NatsProducer) Produce(ctx context.Context, key, value []byte) error {
-	_, err := np.js.Publish(np.config.Subject, value)
+	err := np.nc.Publish(np.config.Subject, value)
 	if err != nil {
 		log.Printf("Error publishing message to NATS: %v", err)
 		return err

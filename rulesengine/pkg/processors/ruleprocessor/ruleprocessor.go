@@ -30,16 +30,13 @@ func NewRuleProcessor(config *config.Config) *RuleProcessor {
 
 	natsConsumerConfig := nats.NatsConsumerConfig{
 		Servers:  []string{config.Nats.Server},
-		Stream:   config.Nats.Stream,
 		GroupID:  config.Nats.ConsumerGroup,
 		Subjects: []string{config.Nats.InletSubject},
-		Durable:  config.Nats.Durable,
 	}
 	consumer := nats.NewNatsConsumer(natsConsumerConfig)
 
 	natsProducerConfig := nats.NatsProducerConfig{
 		Servers: []string{config.Nats.Server},
-		Stream:  config.Nats.Stream,
 		Subject: config.Nats.OutletSubject,
 	}
 
@@ -183,9 +180,9 @@ func (rp *RuleProcessor) getRuleByID(ruleID string) (*models.Rule, error) {
 				Position:       row["condition_position"].(string),
 				Type:           row["condition_type"].(string),
 				DeviceId:       row["condition_device_id"].(string),
-				DeviceName:    row["condition_device_name"].(string),
+				DeviceName:     row["condition_device_name"].(string),
 				PropertyId:     row["condition_property_id"].(string),
-				PropertyName: row["condition_property_name"].(string),
+				PropertyName:   row["condition_property_name"].(string),
 				OperatorId:     row["condition_operator_id"].(string),
 				OperatorSymbol: row["condition_operator_symbol"].(string),
 				Value:          row["condition_value"].(string),
@@ -419,7 +416,6 @@ func (rp *RuleProcessor) dataTransformer(data string) {
 		} else {
 			fmt.Printf("Rule %s evaluation result: %v\n", rule.ID, result)
 			if result {
-				ctx := context.Background()
 				ruleModelByte, marshalErr := json.Marshal(rule)
 				if marshalErr != nil {
 					log.Error("Error marshalling device model: %v", marshalErr)
@@ -427,7 +423,7 @@ func (rp *RuleProcessor) dataTransformer(data string) {
 				}
 				producer := rp.NatsProducer
 				// defer producer.Close()
-				err = producer.Produce(ctx, []byte(rule.ID), ruleModelByte)
+				err = producer.Produce(context.Background(), []byte(rule.ID), ruleModelByte)
 				if err != nil {
 					log.Error("Error producing message to Kafka: %v", err)
 				}
