@@ -90,7 +90,7 @@ func (np *NotificationProcessor) ruleDataTransformer(data string) {
 		Source:      "RuleEngine",
 		Name:        rule.Name,
 		AlertID:     rule.ID,
-		Description: rule.Name, // Using Name as Description since Rule doesn't have a Description field
+		Description: rule.Description, // Using Name as Description since Rule doesn't have a Description field
 		Status:      "Broadcasted",
 		BroadcastedStateMetadata: models.BroadcastedStateMetadata{
 			BroadcastedBy: "System",

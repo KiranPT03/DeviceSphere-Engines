@@ -21,6 +21,7 @@ type Rule struct {
 	Severity    string      `json:"severity"`
 	Status      string      `json:"status"`
 	CreatedAt   string      `json:"createdAt"`
+	Description string      `json:"description"`
 	UpdatedAt   string      `json:"updatedAt"`
 	GeneratedAt string      `json:"generatedAt"`
 	Conditions  []Condition `json:"condition"`
