@@ -51,7 +51,7 @@ func (np *NatsProducer) init() error {
 		log.Printf("Error connecting to NATS: %v", err)
 		return err
 	}
-	
+
 	return nil
 }
 
@@ -77,8 +77,8 @@ func (np *NatsProducer) Close() {
 func main() {
 	// Configure the NATS producer
 	producerConfig := NatsProducerConfig{
-		Servers: []string{"nats://172.31.38.233:4222"}, // Replace with your NATS server address
-		Subject: "data.rawData",                        // Replace with your subject
+		Servers: []string{"nats://192.168.1.6:4222"}, // Replace with your NATS server address
+		Subject: "data.rawData",                      // Replace with your subject
 	}
 
 	// Create the NATS producer

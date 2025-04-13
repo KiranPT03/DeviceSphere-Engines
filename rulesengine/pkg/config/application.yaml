@@ -3,13 +3,13 @@ logger:
   filepath: ./kafkaingest.log
 
 nats:
-  server: "nats://172.31.38.233:4222"
+  server: "nats://192.168.1.6:4222"
   inlet_subject: "data.processedData"
   outlet_subject: "data.ruleNotificationData"
   consumer_group: "cg_rule_engine"
 
 postgres:
-  host: "13.200.253.161"
+  host: "192.168.1.6"
   port: 5432
   user: user_device_sphere
   password: p@ssw0rd@deviceSphere

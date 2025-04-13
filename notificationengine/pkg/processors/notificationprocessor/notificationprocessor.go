@@ -1,14 +1,22 @@
 package notificationprocessor
 
 import (
+	"encoding/json"
+
 	config "factorysphere/devicesphere/engines/notificationengine/pkg/config"
 	nats "factorysphere/devicesphere/engines/notificationengine/pkg/connectors/nats"
+	elastic "factorysphere/devicesphere/engines/notificationengine/pkg/databases/elastic"
 	postgres "factorysphere/devicesphere/engines/notificationengine/pkg/databases/postgres"
+	models "factorysphere/devicesphere/engines/notificationengine/pkg/models"
+	commons "factorysphere/devicesphere/engines/notificationengine/pkg/utils/commons"
 	log "factorysphere/devicesphere/engines/notificationengine/pkg/utils/loggers"
+
+	"github.com/google/uuid"
 )
 
 type NotificationProcessor struct {
 	PGRepository *postgres.PostgreSQLRepository
+	ESRepository *elastic.ElasticsearchRepository
 	NatsConsumer *nats.NatsConsumer
 	NatsProducer *nats.NatsProducer
 	Config       *config.Config
@@ -18,6 +26,13 @@ func NewNotificationProcessor(config *config.Config) *NotificationProcessor {
 	// Create a new PostgreSQL repository instance
 	repository, err := postgres.NewPostgreSQLRepository(config)
 	if err != nil {
+		panic(err)
+	}
+
+	// Create a new Elasticsearch repository instance
+	esRepository, err := elastic.NewElasticsearchRepository(config)
+	if err != nil {
+		log.Error("Failed to create Elasticsearch repository: %v", err)
 		panic(err)
 	}
 
@@ -41,15 +56,82 @@ func NewNotificationProcessor(config *config.Config) *NotificationProcessor {
 
 	return &NotificationProcessor{
 		PGRepository: repository,
+		ESRepository: esRepository,
 		NatsConsumer: consumer,
 		NatsProducer: producer,
 		Config:       config,
 	}
 }
 
-func (np *NotificationProcessor) dataTransformer(data string) {
-	log.Debug("Data received for rule %s", data)
+func (np *NotificationProcessor) ruleDataTransformer(data string) {
+	log.Debug("Raw rule data received: %s", data)
 
+	// Create a Rule instance to hold the parsed data
+	var rule models.Rule
+
+	// Unmarshal the JSON string into the Rule struct
+	err := json.Unmarshal([]byte(data), &rule)
+	if err != nil {
+		log.Error("Failed to unmarshal rule data: %v", err)
+		return
+	}
+
+	// Generate a random UUID for the notification ID
+	notificationID := uuid.New().String()
+	currentTime := commons.GetCurrentUTCTimestamp()
+
+	// Create a notification from the rule data
+	notification := models.Notification{
+		ID:          notificationID,
+		Type:        "Rule",
+		Severity:    rule.Severity,
+		ReceivedAt:  currentTime,
+		GeneratedAt: rule.GeneratedAt, // Using CreatedAt as GeneratedAt
+		Source:      "RuleEngine",
+		Name:        rule.Name,
+		AlertID:     rule.ID,
+		Description: rule.Name, // Using Name as Description since Rule doesn't have a Description field
+		Status:      "Broadcasted",
+		BroadcastedStateMetadata: models.BroadcastedStateMetadata{
+			BroadcastedBy: "System",
+			BroadcastedAt: currentTime,
+		},
+	}
+
+	// Convert notification to JSON
+	notificationJSON, err := json.Marshal(notification)
+	if err != nil {
+		log.Error("Failed to marshal notification: %v", err)
+		return
+	}
+
+	// Log the created notification
+	log.Debug("Created notification: %s", string(notificationJSON))
+
+	// // Send the notification to the outlet topic
+	// err = np.NatsProducer.Produce(context.Background(), nil, notificationJSON)
+	// if err != nil {
+	// 	log.Error("Failed to produce notification message: %v", err)
+	// 	return
+	// }
+
+	// log.Info("Notification sent to outlet topic: %s", notification.ID)
+
+	// Store the notification in Elasticsearch if available
+	if np.ESRepository != nil {
+		// Convert notification to map for Elasticsearch
+		notificationMap := map[string]interface{}{}
+		notificationBytes, _ := json.Marshal(notification)
+		json.Unmarshal(notificationBytes, &notificationMap)
+
+		// Store in Elasticsearch
+		_, err = np.ESRepository.Create("device-sphere-notifications", notificationMap)
+		if err != nil {
+			log.Error("Failed to store notification in Elasticsearch: %v", err)
+		} else {
+			log.Debug("Notification stored in Elasticsearch: %s", notification.ID)
+		}
+	}
 }
 
 func (np *NotificationProcessor) ProcessData() {
@@ -66,7 +148,7 @@ func (np *NotificationProcessor) ProcessData() {
 	for {
 		select {
 		case msg := <-rawDataTopicChan:
-			go np.dataTransformer(string(msg.Data))
+			go np.ruleDataTransformer(string(msg.Data))
 			// case msg := <-processedDataTopicChan:
 			// 	log.Debug("Received message topic: processed_data: %s", msg.Data)
 		}

@@ -8,9 +8,10 @@ import (
 )
 
 type Config struct {
-	Logger   Logger   `yaml:"logger"`
-	Nats     Nats     `yaml:"nats"`
-	Postgres Postgres `yaml:"postgres"`
+	Logger      Logger      `yaml:"logger"`
+	Nats        Nats        `yaml:"nats"`
+	Postgres    Postgres    `yaml:"postgres"`
+	Elasticsearch Elasticsearch `yaml:"elasticsearch"` // Added Elasticsearch config
 }
 
 type Logger struct {
@@ -31,6 +32,15 @@ type Postgres struct {
 	User     string `yaml:"user"`
 	Password string `yaml:"password"`
 	DBName   string `yaml:"dbname"`
+}
+
+// Elasticsearch configuration
+type Elasticsearch struct {
+	Addresses []string `yaml:"addresses"`
+	Username  string   `yaml:"username"`
+	Password  string   `yaml:"password"`
+	CloudID   string   `yaml:"cloud_id"`
+	APIKey    string   `yaml:"api_key"`
 }
 
 func GetConfig() (*Config, error) {

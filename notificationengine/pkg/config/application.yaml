@@ -2,16 +2,21 @@ level: DEBUG
 filepath: ./natsingest.log
 
 nats:
-  server: "nats://13.200.253.161:4222"
-  stream: "NOTIFICATION_ENGINE_STREAM" # Separate inlet stream
+  server: "nats://192.168.1.6:4222"
   inlet_subject: "data.ruleNotificationData"
   outlet_subject: "data.processedNotificationData"
   consumer_group: "cg_notification_engine"
-  durable: "nats_consumer_durable"
 
 postgres:
-  host: "13.200.253.161"
+  host: "192.168.1.6"
   port: 5432
   user: user_device_sphere
   password: p@ssw0rd@deviceSphere
   dbname: data_device_sphere
+
+elasticsearch:
+  addresses: ["http://192.168.1.6:9200"]
+  username: ""
+  password: ""
+  cloud_id: ""
+  api_key: ""

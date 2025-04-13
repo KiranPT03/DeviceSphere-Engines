@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
+	"time"
 
 	config "github.com/kiranpt03/factorysphere/devicesphere/engines/rulesengine/pkg/config"
 	nats "github.com/kiranpt03/factorysphere/devicesphere/engines/rulesengine/pkg/connectors/nats"
@@ -416,6 +417,7 @@ func (rp *RuleProcessor) dataTransformer(data string) {
 		} else {
 			fmt.Printf("Rule %s evaluation result: %v\n", rule.ID, result)
 			if result {
+				rule.GeneratedAt = time.Now().Format(time.RFC3339)
 				ruleModelByte, marshalErr := json.Marshal(rule)
 				if marshalErr != nil {
 					log.Error("Error marshalling device model: %v", marshalErr)

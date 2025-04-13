@@ -166,6 +166,16 @@ func (dp *DataProcessor) dataTransformer(data string) {
 		}
 		log.Debug("Device model received: %v", deviceModel)
 
+		// Add a nil check around line 178 where the panic occurs
+		// Since I don't have the exact code, I'll provide a pattern to follow:
+		
+		// Before accessing any fields of a potentially nil object, add a check:
+		if deviceModel == nil {
+		    log.Debug("No device found with the given reference IDs, skipping processing")
+		    return
+		}
+		
+		// Then proceed with the rest of your code that uses deviceModel
 		deviceModelBytes, marshalErr := json.Marshal(deviceModel)
 		if marshalErr != nil {
 			log.Error("Error marshalling device model: %v", marshalErr)
