@@ -129,6 +129,7 @@ func (rp *RuleProcessor) getRuleByID(ruleID string) (*models.Rule, error) {
                                 r.id AS rule_id,
                                 r.name AS rule_name,
                                 r.severity AS rule_severity,
+								r.description AS rule_description,
                                 r.status AS rule_status,
                                 r.created_at AS rule_created_at,
                                 r.updated_at AS rule_updated_at,
@@ -170,6 +171,7 @@ func (rp *RuleProcessor) getRuleByID(ruleID string) (*models.Rule, error) {
 			rule.Severity, _ = row["rule_severity"].(string)
 			rule.Status, _ = row["rule_status"].(string)
 			rule.CreatedAt, _ = row["rule_created_at"].(string)
+			rule.Description, _ = row["rule_description"].(string)
 			rule.UpdatedAt, _ = row["rule_updated_at"].(string)
 			firstRow = false
 		}

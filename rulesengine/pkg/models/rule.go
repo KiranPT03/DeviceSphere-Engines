@@ -22,6 +22,7 @@ type Rule struct {
 	Status      string      `json:"status"`
 	CreatedAt   string      `json:"createdAt"`
 	UpdatedAt   string      `json:"updatedAt"`
+	Description string      `json:"description"`
 	GeneratedAt string      `json:"generatedAt"`
 	Conditions  []Condition `json:"condition"`
 }
